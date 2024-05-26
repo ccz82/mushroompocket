@@ -358,13 +358,14 @@ namespace MushroomPocket
 
                 foreach (MushroomMaster mushroomMaster in mushroomMasters)
                 {
-                    List<Character> initialCharacters = context.Characters
-                        .ToList() // Client-side evaluation, hence double call to ToList()
+                    // Find number of occurrences of character that is equal mushroomMaster.Name
+                    int occurrences = context.Characters
+                        .ToList()
                         .Where(character => character.Name.ToString() == mushroomMaster.Name)
-                        .ToList();
+                        .Count();
 
                     // Print out every available transformation until the number of occurrences is less than the NoToTransform.
-                    for (int i = initialCharacters.Count; i >= mushroomMaster.NoToTransform; i -= mushroomMaster.NoToTransform)
+                    for (int i = occurrences; i >= mushroomMaster.NoToTransform; i -= mushroomMaster.NoToTransform)
                     {
                         Console.WriteLine($"{mushroomMaster.Name} --> {mushroomMaster.TransformTo}");
                         transformationFound = true;
@@ -401,25 +402,34 @@ namespace MushroomPocket
 
                 foreach (MushroomMaster mushroomMaster in mushroomMasters)
                 {
-                    List<Character> initialCharacters = context.Characters
-                        .ToList() // Client-side evaluation, hence double call to ToList()
+                    // Find number of occurrences of character that is equal mushroomMaster.Name
+                    int occurrences = context.Characters
+                        .ToList()
                         .Where(character => character.Name.ToString() == mushroomMaster.Name)
-                        .ToList();
+                        .Count();
 
                     // Iterate out every available transformation until the number of occurrences is less than the NoToTransform.
-                    for (int i = initialCharacters.Count; i >= mushroomMaster.NoToTransform; i -= mushroomMaster.NoToTransform)
+                    for (int i = occurrences; i >= mushroomMaster.NoToTransform; i -= mushroomMaster.NoToTransform)
                     {
-                        // Perform transformation by removing the initial characters.
-                        context.Characters.RemoveRange(initialCharacters.Take(mushroomMaster.NoToTransform));
+                        for (int j = 0; j < mushroomMaster.NoToTransform; j++)
+                        {
+                            // Perform transformation by removing the initial characters.
+                            context.Characters.Remove(
+                                    context.Characters
+                                    .ToList()
+                                    .Where(character => character.Name.ToString() == mushroomMaster.Name)
+                                    .First()
+                                    );
+
+                            // Save changes to the database.
+                            context.SaveChanges();
+                        }
 
                         // Finally, create the newly transformed character and add it to the database.
                         // The newly transformed character has 100 HP and 0 EXP.
                         Type type = Type.GetType($"MushroomPocket.{mushroomMaster.TransformTo}");
                         Character character = (Character)Activator.CreateInstance(type, 100, 0);
                         context.Characters.Add(character);
-
-                        // Save changes to the database.
-                        context.SaveChanges();
 
                         Console.WriteLine($"Transformed {mushroomMaster.Name} --> {mushroomMaster.TransformTo}");
 
@@ -430,6 +440,11 @@ namespace MushroomPocket
                 if (!transformationFound)
                 {
                     Console.WriteLine("There is currently no transformation available.");
+                }
+                else
+                {
+                    // Save changes to the database.
+                    context.SaveChanges();
                 }
             }
             else
