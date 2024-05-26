@@ -147,6 +147,13 @@ namespace MushroomPocket
                 Console.Write("Enter Character's Name: ");
                 string name = Console.ReadLine();
 
+                // We're working with enums, which are just symbolic constants (int) so reject integer input.
+                if (int.TryParse(name, out int choice))
+                {
+                    Console.WriteLine("You did not enter a valid character's username. Please try again!");
+                    continue;
+                }
+
                 // Check if the string input, can be parsed to a member of CharacterName.
                 // Second argument in Enum.TryParse determines case sensitivity when comparing.
                 if (!Enum.TryParse<CharacterName>(name.Trim(), true, out CharacterName characterName))
